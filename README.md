@@ -16,6 +16,10 @@ a Terraform-managed NLB.
 | [`docs/TODO.md`](docs/TODO.md) | The 4-week build checklist |
 | [`CLAUDE.md`](CLAUDE.md) | Guardrails and current state |
 
+## AWS Diagram
+
+<img width="5999" height="2884" alt="aws_diagram2" src="https://github.com/user-attachments/assets/bfcf495c-9ead-458f-bfa3-aea2f14abbe8" />
+
 ## Status
 
 All three services + the SPA are built, containerised, and deployed to real EKS via one
