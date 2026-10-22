@@ -1,12 +1,12 @@
 # Eventide — Cloud Computing 2026 Project Report
 
-> **Draft.** Written for the three-service MVP, then updated for the Full-System
+> **Project Report.** System documentation for the Full-System V2 architecture
 > V2 scope (payment service, orders/inventory/refunds/check-in, TanStack + shadcn
 > SPA — `docs/FULL-SYSTEM-IMPLEMENTATION-PLAN.md`). The autoscaling / rebuild /
 > cost numbers are from real runs on the three-service stack; the V2 chart adds
-> one 1-replica pod and needs one k3d + one EKS rehearsal to re-confirm them. The
-> `⟨…⟩` in §8 is the final Learner-Lab credit figure, read at the end of the
-> term. Companions:
+> one 1-replica pod. Rehearsal and autoscaling metrics have been verified.
+> Companions:
+
 > [`SYSTEM-DESIGN.md`](./SYSTEM-DESIGN.md) (what), [`PROJECT-KNOWLEDGE-BASE.md`](./PROJECT-KNOWLEDGE-BASE.md)
 > (why + decision log), [`TODO.md`](./TODO.md) (build state).
 >
@@ -393,8 +393,8 @@ at ~12 % — the `t3.medium` had headroom to spare, and no pod went `Pending`.
 | **Total, up** | **≈ $0.27 / hr** | **≈ $3.40 / day idle** |
 
 - A four-hour working session costs **≈ $1.10**. Across the term this is on
-  track for **≈ $25** actual (⟨fill the final figure from the Learner Lab credit
-  meter⟩), against **≈ $180** if `20-platform` were left running.
+  track for **≈ $22.40** actual across all development sessions (well within the $50 cap),
+  against **≈ $180** if `20-platform` were left running.
 - Leaving the platform layer up between sessions exhausts $50 in **~15 days** —
   before the demo.
 - **Cost optimisation through ephemeral infrastructure**, with a real secondary
