@@ -7,28 +7,33 @@ echo.
 
 set "PATH=%USERPROFILE%\.bun\bin;%PATH%"
 
-echo [1/4] Checking Bun & Dependencies...
+echo [1/4] Checking Bun and Packages...
 bun --version >nul 2>&1
-if errorlevel 1 (
-    if not exist "%USERPROFILE%\.bun\bin\bun.exe" (
-        echo [!] Bun is not found. Installing Bun automatically (takes ~10s)...
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1 | iex"
-        set "PATH=%USERPROFILE%\.bun\bin;%PATH%"
-    )
-)
+if errorlevel 1 goto :install_bun
+goto :bun_ready
 
+:install_bun
+if exist "%USERPROFILE%\.bun\bin\bun.exe" goto :bun_in_profile
+echo [!] Bun is not found. Installing Bun automatically...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1 | iex"
+
+:bun_in_profile
+set "PATH=%USERPROFILE%\.bun\bin;%PATH%"
 bun --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Could not setup Bun automatically.
-    echo Please run this in PowerShell: powershell -c "irm bun.sh/install.ps1 | iex"
+    echo Please install Bun manually by running in PowerShell:
+    echo powershell -c "irm bun.sh/install.ps1 | iex"
     pause
     goto :eof
 )
+
+:bun_ready
 echo Bun is ready!
 
 if not exist "node_modules" (
     echo.
-    echo [!] First-time setup: Installing project packages (bun install)...
+    echo [!] First-time setup: Installing project packages...
     call bun install
     echo Packages installed successfully!
 )
