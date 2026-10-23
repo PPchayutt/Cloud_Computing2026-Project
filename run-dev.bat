@@ -7,14 +7,31 @@ echo.
 
 set "PATH=%USERPROFILE%\.bun\bin;%PATH%"
 
-echo [1/4] Checking Bun...
+echo [1/4] Checking Bun & Dependencies...
 bun --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Bun is not found!
+    if not exist "%USERPROFILE%\.bun\bin\bun.exe" (
+        echo [!] Bun is not found. Installing Bun automatically (takes ~10s)...
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1 | iex"
+        set "PATH=%USERPROFILE%\.bun\bin;%PATH%"
+    )
+)
+
+bun --version >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Could not setup Bun automatically.
+    echo Please run this in PowerShell: powershell -c "irm bun.sh/install.ps1 | iex"
     pause
     goto :eof
 )
 echo Bun is ready!
+
+if not exist "node_modules" (
+    echo.
+    echo [!] First-time setup: Installing project packages (bun install)...
+    call bun install
+    echo Packages installed successfully!
+)
 echo.
 
 echo [2/4] Starting PostgreSQL in Docker...
