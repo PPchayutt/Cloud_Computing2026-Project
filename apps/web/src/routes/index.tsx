@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight, CalendarOff, Check, Sparkles } from 'lucide-react'
+import { ArrowRight, CalendarOff, Check } from 'lucide-react'
 import { EventCard } from '@/components/event-card'
 import { SiteFooter } from '@/components/site-footer'
 import { Badge } from '@/components/ui/badge'
@@ -14,10 +14,10 @@ export const Route = createFileRoute('/')({
 })
 
 const ORGANIZER_FEATURES = [
-  'Publish events with multiple ticket types',
-  'Capacity enforced per event, no overselling',
-  'QR check-in for staff at the door',
-  'Sales and attendance summaries in real time',
+  'สร้างและจัดการประเภทตั๋วได้หลากหลาย (Multiple Ticket Tiers)',
+  'ระบบ Transaction Lock ป้องกันการจองเกินโควตา (Zero Overselling)',
+  'ระบบสแกนตรวจสอบตั๋วหน้างานด้วย Signed QR Code',
+  'แดชบอร์ดสรุปยอดขายและการเช็กอินของผู้เข้าร่วมงานแบบเรียลไทม์',
 ]
 
 function LandingPage() {
@@ -36,25 +36,25 @@ function Hero() {
     <section className="relative overflow-hidden">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-32 right-0 -z-10 h-64 w-96 rounded-full bg-primary/10 blur-3xl"
+        className="hidden"
       />
       <div className="container mx-auto flex flex-col items-center px-4 py-20 text-center sm:py-28">
         <p className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-          <Sparkles className="size-3.5 text-primary" />
-          Concerts, workshops, and community events across Thailand
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold">IT KMITL</Badge>
+          Cloud-Native Event Registration & Ticket Platform
         </p>
         <h1 className="max-w-3xl font-heading text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-          Find your next
+          Discover, Book & Manage
           <br />
-          <span className="text-primary">unforgettable event.</span>
+          <span className="text-primary">Campus & Tech Events.</span>
         </h1>
         <p className="mt-4 max-w-xl text-balance text-muted-foreground">
-          Browse curated events, reserve tickets in a few clicks, and manage everything from one
-          place — or apply to become an organizer and run your own.
+          ระบบจัดการและสำรองที่นั่งอีเวนต์ออนไลน์ จัดสรรที่นั่งเรียลไทม์ด้วย Transaction Lock
+          พร้อมระบบชำระเงินจำลองและตั๋วเข้ารหัส Signed QR Code
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button size="lg" render={<Link to="/events" />}>
@@ -125,19 +125,19 @@ function OrganizerCta() {
     <section className="relative overflow-hidden">
       <div
         aria-hidden
-        className="pointer-events-none absolute left-0 top-1/2 -z-10 h-64 w-96 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl"
+        className="hidden"
       />
       <div className="container mx-auto px-4 py-16">
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <Badge variant="secondary" className="mb-4">
-            Free events only, for now
+            Organizer Portal
           </Badge>
           <h2 className="font-heading text-2xl font-black tracking-tight sm:text-3xl">
-            Want to run your own event?
+            จัดงานอีเวนต์ของคุณเองบน Eventide
           </h2>
           <p className="mt-2 max-w-xl text-muted-foreground">
-            Submit an organizer application. Once an admin approves it, you can create and manage
-            events right away.
+            ยื่นขอสิทธิ์เป็นผู้จัดงาน (Organizer) เมื่อได้รับการอนุมัติจากผู้ดูแลระบบ
+            คุณสามารถสร้างงาน จัดการประเภทตั๋ว และตรวจสอบสถิติได้ทันที
           </p>
           <ul className="mt-6 grid gap-2 text-left text-sm sm:grid-cols-2">
             {ORGANIZER_FEATURES.map((feature) => (

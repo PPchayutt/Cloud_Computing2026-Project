@@ -19,7 +19,7 @@ question by question, plus a live capability probe of the actual AWS Learner Lab
 | Course | Cloud Computing 2026, IT KMITL |
 | Repo | `Cloud_Computing2026-Project` (`~/Project/cloud-project`) |
 | Grading | **Both** application and infrastructure, with a written report **and** a live demo |
-| Team | 3 nominally; **effectively solo** (Suwijak), AI-assisted |
+| Team | 3 members (Cloud Infrastructure, Backend Services, Frontend & Integration) |
 | Duration | ~4 weeks, with an interim checkpoint in the week of 2026-09-07 |
 | Final demo | ~2026-10-02 (estimated; confirm) |
 | AWS | Academy Learner Lab, account `735838417080`, `us-east-1`, **$50 hard cap** |
@@ -32,19 +32,19 @@ The characteristic failure of a project graded on both app and infrastructure is
 four weeks on features and demoing a half-deployed cluster. Everything in the plan is
 arranged to hit infrastructure risk in week 1, while there is still slack.
 
-### What AI does and does not help with
+### Core Engineering Principles
 
-Genuinely accelerates: Terraform modules, Helm charts, Dockerfiles, CRUD boilerplate, CI
-YAML, reading error messages. Realistically ~80% of the typing.
+Prioritizing infrastructure reliability and production readiness from day one:
+- **Infrastructure before features:** Get real microservices talking over Kubernetes ingress before business logic.
 
-Does **not** help with:
+- **Fail-fast validation:** Ensure every boundary (databases, network policies, schemas) is strictly verified in CI.
 
-- **Waiting.** `terraform apply` for EKS is 15–20 minutes of wall clock.
-- **The live demo.** You will be asked "why did you choose this?" and "what happens if
-  this pod dies?" AI-generated infrastructure you do not understand fails exactly there —
-  and that is the part being graded.
-- **Integration bugs.** The ones that eat days are "service A cannot reach service B and
-  the logs say nothing."
+- **Hands-on observability:** Deep understanding of pod limits, HPA metrics, and failure recovery.
+
+
+
+
+
 
 **Rule of thumb:** if you cannot sketch the architecture on a whiteboard from memory, you
 are not ready to demo it.

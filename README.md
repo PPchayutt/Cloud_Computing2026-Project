@@ -14,7 +14,7 @@ a Terraform-managed NLB.
 | [`docs/SYSTEM-DESIGN.md`](docs/SYSTEM-DESIGN.md) | **What** is being built — architecture, data model, security, IaC layout |
 | [`docs/PROJECT-KNOWLEDGE-BASE.md`](docs/PROJECT-KNOWLEDGE-BASE.md) | **Why** — decision log, verified lab constraints, trap table |
 | [`docs/TODO.md`](docs/TODO.md) | The 4-week build checklist |
-| [`CLAUDE.md`](CLAUDE.md) | Guardrails and current state |
+| [`docs/REPORT.md`](docs/REPORT.md) | Final project report and architecture evaluation |
 
 ## AWS Diagram
 
@@ -263,4 +263,4 @@ Learner Lab has no OIDC provider and session credentials expire in 4 hours.
 - **`/health/live` must never touch the database** — only `/health/ready` does.
 - **Services handle `SIGTERM`** for graceful shutdown.
 
-More in [`CLAUDE.md`](CLAUDE.md).
+More in [`docs/SYSTEM-DESIGN.md`](docs/SYSTEM-DESIGN.md).

@@ -14,7 +14,20 @@ const EVENT_DATABASE_URL =
   process.env.EVENT_DATABASE_URL ?? 'postgres://event_svc:event_svc@localhost:5432/event_db'
 const PASSWORD = 'seed-password-123'
 const THUMBNAIL = Bun.file(new URL('../assets/eventide-seed-thumbnail.webp', import.meta.url))
-const EVENT_TITLES = ['Cloud Native Bangkok', 'Kubernetes Workshop', 'React Community Night']
+const EVENT_TITLES = [
+  'KMITL Open House 2026: Cloud & AI Innovations',
+  'Bangkok Tech Career Expo & Developer Conference',
+  'Kubernetes & Microservices Hands-on Bootcamp',
+  'Ladkrabang Indie Music Fest: Acoustic Night',
+  'Modern Web & Full-Stack Development Summit 2026',
+  'Cybersecurity & Zero Trust Architecture Workshop',
+  'Next-Gen Cloud Computing: Distributed Systems',
+  'Bangkok Tech Startup Pitching & Networking Day',
+  'Data Science & AI Practical Lab in Action',
+  'Thailand Creative Technology & Design Showcase',
+  'KMITL Hackathon 2026: Code for Community',
+  'Future Cloud Architectures (Special Draft Session)',
+]
 
 const PEOPLE = [
   { name: 'Eventide Admin', email: 'admin@eventide.test', role: 'admin', approval: 'NOT_APPLIED' },
@@ -161,7 +174,7 @@ async function main() {
     if (process.env.SEED_FORCE) await eventDb.delete(events)
     const now = Date.now()
     const eventSpecs = Array.from({ length: 12 }, (_, index) => ({
-      title: `${EVENT_TITLES[index % EVENT_TITLES.length]} #${index + 1}`,
+      title: EVENT_TITLES[index % EVENT_TITLES.length],
       status: index === 11 ? ('DRAFT' as const) : ('PUBLISHED' as const),
       startsAt: new Date(now + (index + 3) * 86_400_000),
       endsAt: new Date(now + (index + 3) * 86_400_000 + 10_800_000),

@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <BrandMark size="sm" />
-          <span className="hidden sm:inline">— Cloud Computing 2026, IT KMITL</span>
+          <span className="text-xs sm:text-sm">— Cloud Computing 2026 | School of Information Technology, KMITL</span>
         </div>
         <nav className="flex items-center gap-4 text-sm text-muted-foreground">
           <Link to="/events" className="hover:text-foreground">
