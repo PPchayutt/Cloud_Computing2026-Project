@@ -211,6 +211,15 @@ export abstract class EventService {
       (user.role !== 'organizer' || user.organizerApprovalStatus !== 'APPROVED')
     )
       throw new Forbidden()
+
+    const startsAt = new Date(input.startsAt)
+    const endsAt = new Date(input.endsAt)
+    const salesStartAt = new Date(input.salesStartAt)
+    const salesEndAt = new Date(input.salesEndAt)
+    if (endsAt <= startsAt) throw new InvalidTransition('endsAt must be after startsAt')
+    if (salesEndAt <= salesStartAt) throw new InvalidTransition('salesEndAt must be after salesStartAt')
+    if (salesEndAt > startsAt) throw new InvalidTransition('salesEndAt cannot be after startsAt')
+
     const [row] = await db
       .insert(events)
       .values({
@@ -240,6 +249,14 @@ export abstract class EventService {
     assertManager(current, user)
     if (current.status !== 'DRAFT' && current.status !== 'PUBLISHED' && user.role !== 'admin')
       throw new InvalidTransition()
+
+    const startsAt = new Date(input.startsAt)
+    const endsAt = new Date(input.endsAt)
+    const salesStartAt = new Date(input.salesStartAt)
+    const salesEndAt = new Date(input.salesEndAt)
+    if (endsAt <= startsAt) throw new InvalidTransition('endsAt must be after startsAt')
+    if (salesEndAt <= salesStartAt) throw new InvalidTransition('salesEndAt must be after salesStartAt')
+    if (salesEndAt > startsAt) throw new InvalidTransition('salesEndAt cannot be after startsAt')
     const totalQuota = await ticketQuota(id)
     if (input.capacity < totalQuota)
       throw new InvalidTransition('event capacity cannot be below ticket quota')
