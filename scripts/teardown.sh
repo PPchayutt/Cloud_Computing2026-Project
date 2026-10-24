@@ -35,19 +35,20 @@ terraform -chdir="$PLATFORM" destroy -auto-approve
 
 echo
 echo "== 3. VERIFY — every list below must be empty =="
+REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
 echo "--- EKS clusters ---"
-aws eks list-clusters --output text
+aws eks list-clusters --region "$REGION" --output text
 echo "--- RDS instances ---"
-aws rds describe-db-instances --query 'DBInstances[].DBInstanceIdentifier' --output text
+aws rds describe-db-instances --region "$REGION" --query 'DBInstances[].DBInstanceIdentifier' --output text
 echo "--- load balancers (v2) ---"
-aws elbv2 describe-load-balancers --query 'LoadBalancers[].LoadBalancerName' --output text
+aws elbv2 describe-load-balancers --region "$REGION" --query 'LoadBalancers[].LoadBalancerName' --output text
 echo "--- classic ELBs ---"
-aws elb describe-load-balancers --query 'LoadBalancerDescriptions[].LoadBalancerName' --output text 2>/dev/null
+aws elb describe-load-balancers --region "$REGION" --query 'LoadBalancerDescriptions[].LoadBalancerName' --output text 2>/dev/null || true
 echo "--- running EC2 instances ---"
-aws ec2 describe-instances --filters Name=instance-state-name,Values=running \
+aws ec2 describe-instances --region "$REGION" --filters Name=instance-state-name,Values=running \
   --query 'Reservations[].Instances[].InstanceId' --output text
 echo "--- target groups ---"
-aws elbv2 describe-target-groups --query 'TargetGroups[].TargetGroupName' --output text
+aws elbv2 describe-target-groups --region "$REGION" --query 'TargetGroups[].TargetGroupName' --output text
 echo
 echo "If any line above is non-empty, something survived. Find it now — check the"
 echo "lab credit remaining (expect ~\$1.10/session; more means a resource is still up)."
