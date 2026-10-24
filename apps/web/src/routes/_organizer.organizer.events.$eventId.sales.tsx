@@ -73,7 +73,7 @@ function EventSalesPage() {
             <div className="flex items-center justify-between">
               <span>Available tickets</span>
               <Badge variant="secondary">
-                {summary.totalQuota - summary.reservedTickets - summary.soldTickets}
+                {Math.max(0, summary.totalQuota - summary.reservedTickets - summary.soldTickets)}
               </Badge>
             </div>
           </div>

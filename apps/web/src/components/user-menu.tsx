@@ -1,5 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { LayoutDashboard, LogOut, ScanLine, Ticket, User as UserIcon } from 'lucide-react'
+import { ClipboardList, LayoutDashboard, LogOut, ScanLine, Ticket, User as UserIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +24,7 @@ type SessionUser = {
 
 export function UserMenu() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data: session, isPending } = authClient.useSession()
 
   if (isPending) return <Skeleton className="h-9 w-24" />
@@ -53,12 +55,16 @@ export function UserMenu() {
             {user.email}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem render={<Link to="/profile" />}>
+            <UserIcon data-icon="inline-start" />
+            Profile
+          </DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/tickets" />}>
             <Ticket data-icon="inline-start" />
             Tickets
           </DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/orders" />}>
-            <LayoutDashboard data-icon="inline-start" />
+            <ClipboardList data-icon="inline-start" />
             Orders
           </DropdownMenuItem>
           {role === 'organizer' || role === 'admin' ? (
@@ -78,6 +84,7 @@ export function UserMenu() {
             variant="destructive"
             onClick={async () => {
               await signOut()
+              queryClient.clear()
               await navigate({ to: '/' })
             }}
           >

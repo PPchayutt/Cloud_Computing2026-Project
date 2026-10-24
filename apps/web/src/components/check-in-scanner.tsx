@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { IScannerControls } from '@zxing/browser'
-import { Camera, CameraOff, ScanLine } from 'lucide-react'
+import { Camera, CameraOff, RotateCcw, ScanLine } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -79,6 +79,14 @@ export function CheckInScanner({ initialEventId = '' }: CheckInScannerProps) {
   const controlsRef = useRef<IScannerControls | null>(null)
   const scanLockedRef = useRef(false)
 
+  // Auto-select first managed event if none selected
+  useEffect(() => {
+    const firstEvent = events?.items?.[0]
+    if (!eventId && firstEvent) {
+      setEventId(firstEvent.id)
+    }
+  }, [events, eventId])
+
   const stopCamera = useCallback(() => {
     controlsRef.current?.stop()
     controlsRef.current = null
@@ -100,7 +108,7 @@ export function CheckInScanner({ initialEventId = '' }: CheckInScannerProps) {
     },
     onSuccess: (result) => {
       setOutcome(result)
-      if (result === 'SUCCESS') toast.success('Ticket checked in')
+      if (result === 'SUCCESS') toast.success('Ticket checked in successfully')
     },
     onError: (error) => {
       setOutcome(null)
@@ -175,7 +183,7 @@ export function CheckInScanner({ initialEventId = '' }: CheckInScannerProps) {
       <CardHeader>
         <CardTitle>QR ticket check-in</CardTitle>
         <CardDescription>
-          Choose the event, then place one attendee QR inside the frame.
+          Choose the event, then place an attendee QR code inside the frame or enter the token manually.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6 md:grid-cols-[minmax(0,1.25fr)_minmax(16rem,0.75fr)]">
@@ -235,7 +243,7 @@ export function CheckInScanner({ initialEventId = '' }: CheckInScannerProps) {
                 </SelectContent>
               </Select>
               <FieldDescription>
-                The selected event is enforced by the check-in service.
+                The selected event is verified against the ticket's signed payload.
               </FieldDescription>
             </Field>
           </FieldGroup>
@@ -255,13 +263,29 @@ export function CheckInScanner({ initialEventId = '' }: CheckInScannerProps) {
           </div>
 
           {selectedOutcome ? (
-            <Alert aria-live="polite" variant={outcome === 'SUCCESS' ? 'default' : 'destructive'}>
-              <AlertTitle className="flex items-center gap-2">
-                {selectedOutcome.label}
-                <Badge variant={selectedOutcome.variant}>{outcome}</Badge>
-              </AlertTitle>
-              <AlertDescription>{selectedOutcome.description}</AlertDescription>
-            </Alert>
+            <div className="flex flex-col gap-3">
+              <Alert aria-live="polite" variant={outcome === 'SUCCESS' ? 'default' : 'destructive'}>
+                <AlertTitle className="flex items-center gap-2">
+                  {selectedOutcome.label}
+                  <Badge variant={selectedOutcome.variant}>{outcome}</Badge>
+                </AlertTitle>
+                <AlertDescription>{selectedOutcome.description}</AlertDescription>
+              </Alert>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="self-start gap-1.5"
+                onClick={() => {
+                  setOutcome(null)
+                  setManualToken('')
+                  void startCamera()
+                }}
+              >
+                <RotateCcw className="size-3.5" />
+                Scan next attendee
+              </Button>
+            </div>
           ) : null}
         </div>
       </CardContent>

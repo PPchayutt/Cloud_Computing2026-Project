@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Ticket } from 'lucide-react'
+import { Copy, Ticket } from 'lucide-react'
+import { toast } from 'sonner'
 import { PageHeader } from '@/components/page-header'
 import { TicketQrCode } from '@/components/ticket-qr-code'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -47,10 +49,24 @@ function TicketsPage() {
                     {ticket.status}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    Ticket {ticket.id.slice(0, 8)}
+                    Ticket #{ticket.id.slice(0, 8)}
                   </span>
                 </div>
                 <TicketQrCode eventTitle={ticket.eventTitle} token={ticket.qrToken} />
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(ticket.qrToken)
+                      toast.success('Ticket token copied to clipboard')
+                    }}
+                  >
+                    <Copy className="size-3.5" />
+                    Copy token for check-in
+                  </Button>
+                </div>
               </CardContent>
               <CardFooter className="text-xs text-muted-foreground">
                 Keep this code private. Each ticket can be checked in once.

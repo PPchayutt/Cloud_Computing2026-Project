@@ -18,6 +18,27 @@ import { authClient } from '@/lib/auth'
 
 export const Route = createFileRoute('/login')({ component: LoginPage })
 
+const DEMO_PERSONAS = [
+  {
+    role: 'Organizer',
+    name: 'Somchai Pattana',
+    email: 'somchai@eventide.test',
+    subtitle: 'Manage & create events',
+  },
+  {
+    role: 'Attendee',
+    name: 'Priya Sharma',
+    email: 'priya@eventide.test',
+    subtitle: 'Book tickets & checkout',
+  },
+  {
+    role: 'Admin',
+    name: 'Eventide Admin',
+    email: 'admin@eventide.test',
+    subtitle: 'Moderate users & events',
+  },
+] as const
+
 function LoginPage() {
   const navigate = useNavigate()
   const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in')
@@ -28,8 +49,8 @@ function LoginPage() {
       setError('')
       const result =
         mode === 'sign-in'
-          ? await authClient.signIn.email({ email: value.email, password: value.password })
-          : await authClient.signUp.email(value)
+          ? await authClient.signIn.email({ email: value.email.trim(), password: value.password })
+          : await authClient.signUp.email({ ...value, email: value.email.trim() })
       if (result.error) setError(result.error.message ?? 'Authentication failed')
       else await navigate({ to: '/' })
     },
@@ -44,9 +65,13 @@ function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{mode === 'sign-in' ? 'Welcome back' : 'Create an account'}</CardTitle>
-          <CardDescription>Use email and password or continue with Google.</CardDescription>
+          <CardDescription>
+            {mode === 'sign-in'
+              ? 'Sign in to access your tickets, orders, or organizer tools.'
+              : 'Sign up to register for upcoming events.'}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-5">
           <form
             id="auth-form"
             onSubmit={(event) => {
@@ -92,6 +117,7 @@ function LoginPage() {
                     <Input
                       id={field.name}
                       type="email"
+                      placeholder="e.g. somchai@eventide.test"
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
                       aria-invalid={!field.state.meta.isValid}
@@ -113,6 +139,7 @@ function LoginPage() {
                     <Input
                       id={field.name}
                       type="password"
+                      placeholder="••••••••"
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
                       aria-invalid={!field.state.meta.isValid}
@@ -124,6 +151,39 @@ function LoginPage() {
               {error ? <FieldError>{error}</FieldError> : null}
             </FieldGroup>
           </form>
+
+          {mode === 'sign-in' ? (
+            <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-muted/30 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Demo Accounts
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  seed-password-123
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {DEMO_PERSONAS.map((p) => (
+                  <button
+                    key={p.email}
+                    type="button"
+                    onClick={() => {
+                      form.setFieldValue('email', p.email)
+                      form.setFieldValue('password', 'seed-password-123')
+                      setError('')
+                    }}
+                    className="flex flex-col items-center justify-center rounded-lg border border-border/80 bg-background/90 p-2 text-center transition-all hover:border-primary/60 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    title={`Click to fill: ${p.email} (${p.subtitle})`}
+                  >
+                    <span className="text-xs font-semibold">{p.role}</span>
+                    <span className="w-full truncate text-[10px] text-muted-foreground">
+                      {p.name.split(' ')[0]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
@@ -140,26 +200,11 @@ function LoginPage() {
             )}
           </form.Subscribe>
           <Button
-            variant="outline"
-            className="w-full"
-            onClick={async () => {
-              setError('')
-              try {
-                const res = await authClient.signIn.social({ provider: 'google', callbackURL: '/' })
-                if (res?.error) setError('Google sign-in is not configured on this environment.')
-              } catch {
-                setError('Google sign-in is not configured on this environment.')
-              }
-            }}
-          >
-            Continue with Google
-          </Button>
-          <Button
             variant="ghost"
             className="w-full"
             onClick={() => setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in')}
           >
-            {mode === 'sign-in' ? 'Need an account?' : 'Already registered?'}
+            {mode === 'sign-in' ? 'Need an account? Sign up' : 'Already registered? Log in'}
           </Button>
         </CardFooter>
       </Card>

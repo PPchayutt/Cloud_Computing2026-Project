@@ -43,9 +43,9 @@ const localTime = (offsetHours: number) => {
 }
 
 const textFields = [
-  { name: "title", label: "Event title", type: "text", placeholder: "e.g. Bangkok Tech Conference" },
-  { name: "ticketName", label: "Ticket name", type: "text", placeholder: "e.g. Early Bird" },
-  { name: "price", label: "Price (THB)", type: "text", placeholder: "500.00" },
+  { name: 'title', label: 'Event title', type: 'text', placeholder: 'e.g. Bangkok Tech Conference' },
+  { name: 'ticketName', label: 'Ticket name', type: 'text', placeholder: 'e.g. Early Bird' },
+  { name: 'price', label: 'Price (THB)', type: 'text', placeholder: '500.00' },
 ] as const
 
 const dateFields = [
@@ -58,6 +58,7 @@ const dateFields = [
 export const Route = createFileRoute('/_organizer/organizer/events/new')({
   component: CreateEventPage,
 })
+
 function CreateEventPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -96,8 +97,8 @@ function CreateEventPage() {
       let eventId = createdEventId
       if (!eventId) {
         const created = await edenEvent.api.events.post({
-          title: value.title,
-          description: value.description,
+          title: value.title.trim(),
+          description: value.description.trim(),
           startsAt: bangkokDateTimeInputToIso(value.startsAt),
           endsAt: bangkokDateTimeInputToIso(value.endsAt),
           salesStartAt: bangkokDateTimeInputToIso(value.salesStartAt),
@@ -105,8 +106,14 @@ function CreateEventPage() {
           capacity: value.capacity,
           refundPercent: value.refundPercent,
         })
-        if (created.error || !created.data || created.data instanceof Response)
-          return setError('Could not create event. Confirm organizer approval and dates.')
+        if (created.error || !created.data || created.data instanceof Response) {
+          const errVal = (created.error as any)?.value
+          const msg =
+            (typeof errVal === 'object' && errVal?.message) ||
+            (typeof errVal === 'string' && errVal) ||
+            'Could not create event. Confirm organizer approval and dates.'
+          return setError(msg)
+        }
         eventId = created.data.id
         setCreatedEventId(eventId)
       }
@@ -114,14 +121,20 @@ function CreateEventPage() {
       if (!ticketReady) {
         const ticket = await edenEvent.api['ticket-types'].post({
           eventId,
-          name: value.ticketName,
-          price: value.price,
+          name: value.ticketName.trim(),
+          price: value.price.trim(),
           quota: value.capacity,
           maxPerOrder: 10,
           maxPerUser: 20,
         })
-        if (ticket.error)
-          return setError('The draft was saved, but its ticket type could not be created. Retry.')
+        if (ticket.error) {
+          const errVal = (ticket.error as any)?.value
+          const msg =
+            (typeof errVal === 'object' && errVal?.message) ||
+            (typeof errVal === 'string' && errVal) ||
+            'The draft was saved, but its ticket type could not be created. Retry.'
+          return setError(msg)
+        }
         setTicketReady(true)
       }
 
@@ -144,6 +157,17 @@ function CreateEventPage() {
         }
       }
 
+      if (shouldPublish) {
+        const published = await edenEvent.api.events({ id: eventId }).publish.post()
+        if (published.error) {
+          toast.warning('Event saved as draft. You can publish it once ticket quotas match capacity.')
+        } else {
+          toast.success('Event created and published successfully!')
+        }
+      } else {
+        toast.success('Event draft created successfully!')
+      }
+
       await finish(eventId)
     },
   })
@@ -152,7 +176,7 @@ function CreateEventPage() {
       <CardHeader>
         <CardTitle>Create an event</CardTitle>
         <CardDescription>
-          Events begin as drafts. Add the first ticket type now, then publish when ready.
+          Fill in the details below. You can publish immediately to make it visible on the event catalog.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -179,6 +203,7 @@ function CreateEventPage() {
                     <Input
                       id={field.name}
                       type={type}
+                      placeholder={placeholder}
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={!field.state.meta.isValid}
@@ -228,6 +253,7 @@ function CreateEventPage() {
                   <FieldLabel htmlFor={field.name}>Description</FieldLabel>
                   <Textarea
                     id={field.name}
+                    placeholder="Describe your event agenda, speakers, venue, or admission guidelines..."
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
@@ -263,6 +289,25 @@ function CreateEventPage() {
               />
               <p className="text-sm text-muted-foreground">Optional JPEG, PNG, or WebP cover.</p>
             </Field>
+
+            <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-muted/30 p-3.5">
+              <input
+                id="should-publish"
+                type="checkbox"
+                checked={shouldPublish}
+                onChange={(e) => setShouldPublish(e.target.checked)}
+                className="size-4 rounded border-input text-primary focus:ring-primary cursor-pointer"
+              />
+              <div className="flex flex-col">
+                <label htmlFor="should-publish" className="text-sm font-medium leading-none cursor-pointer">
+                  Publish event immediately
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  When enabled, this event will immediately be live and visible in the public event catalog for registration.
+                </p>
+              </div>
+            </div>
+
             {error ? <FieldError>{error}</FieldError> : null}
           </FieldGroup>
         </form>
@@ -277,7 +322,9 @@ function CreateEventPage() {
                   ? ticketReady
                     ? 'Retry thumbnail upload'
                     : 'Retry ticket type'
-                  : 'Create draft'}
+                  : shouldPublish
+                    ? 'Create & Publish'
+                    : 'Save as draft'}
             </Button>
           )}
         </form.Subscribe>

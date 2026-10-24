@@ -79,12 +79,18 @@ function EditEventPage() {
         capacity: value.capacity,
         refundPercent: value.refundPercent,
       })
-      if (result.error || !result.data || result.data instanceof Response)
-        throw new Error('The event could not be updated. Check the dates and try again.')
+      if (result.error || !result.data || result.data instanceof Response) {
+        const errVal = (result.error as any)?.value
+        const msg =
+          (typeof errVal === 'object' && errVal?.message) ||
+          (typeof errVal === 'string' && errVal) ||
+          'The event could not be updated. Check the dates and try again.'
+        throw new Error(msg)
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Event updated')
+      toast.success('Event updated successfully')
       await navigate({ to: '/organizer/events' })
     },
     onError: (mutationError) => setError(mutationError.message),
@@ -114,6 +120,14 @@ function EditEventPage() {
       }
       if (salesEndAt <= salesStartAt) {
         setError('Ticket sales must end after they start.')
+        return
+      }
+      if (salesEndAt > startsAt) {
+        setError('Ticket sales cannot end after the event starts.')
+        return
+      }
+      if (value.capacity < totalTicketQuota) {
+        setError(`Event capacity cannot be less than the total ticket quota (${totalTicketQuota}).`)
         return
       }
 
