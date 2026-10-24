@@ -39,17 +39,42 @@ PUBLIC_URL="${PUBLIC_URL:-${PUBLIC_URL_TF:-http://$NLB}}"
 echo "registry: $REG   tag: $TAG   services: $SERVICES   publicUrl: $PUBLIC_URL"
 
 aws eks update-kubeconfig --region "$REGION" --name eventide >/dev/null
-aws ecr get-login-password --region "$REGION" \
-  | docker login --username AWS --password-stdin "$REG" >/dev/null
 
-for svc in $SERVICES; do
-  echo "== build $svc =="
-  docker build -f "apps/$svc/Dockerfile" --platform linux/amd64 -t "$REG/eventide/$svc:$TAG" .
-  docker push "$REG/eventide/$svc:$TAG"
-done
+if [ "${BUILD:-1}" != "0" ]; then
+  if docker info >/dev/null 2>&1; then
+    aws ecr get-login-password --region "$REGION" \
+      | docker login --username AWS --password-stdin "$REG" >/dev/null
+
+    for svc in $SERVICES; do
+      echo "== build $svc =="
+      docker build -f "apps/$svc/Dockerfile" --platform linux/amd64 -t "$REG/eventide/$svc:$TAG" .
+      docker push "$REG/eventide/$svc:$TAG"
+    done
+  else
+    echo "== Docker Desktop is not running; checking if images are already on ECR =="
+    for svc in $SERVICES; do
+      if aws ecr describe-images --region "$REGION" --repository-name "eventide/$svc" --image-ids imageTag="$TAG" >/dev/null 2>&1; then
+        echo "== found existing image $REG/eventide/$svc:$TAG in ECR =="
+      else
+        echo "ERROR: Docker Desktop is not running and eventide/$svc:$TAG does not exist in ECR." >&2
+        echo "Please start Docker Desktop and try again." >&2
+        exit 1
+      fi
+    done
+  fi
+else
+  echo "== skipping build + push (BUILD=0), deploying existing images with tag $TAG =="
+fi
 
 # --- namespace + app Secrets from eventide/rds-master ------------------
 kubectl create namespace eventide --dry-run=client -o yaml | kubectl apply -f -
+
+# Auto-ensure database is bootstrapped if not done yet
+BOOTSTRAPPED="$(kubectl -n eventide get job db-bootstrap -o jsonpath='{.status.succeeded}' 2>/dev/null || echo 0)"
+if [ "$BOOTSTRAPPED" != "1" ]; then
+  echo "== db-bootstrap has not completed — running scripts/db-bootstrap.sh first =="
+  bash "$ROOT/scripts/db-bootstrap.sh" "$TAG"
+fi
 
 RDS_JSON="$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$MASTER_SECRET_ARN" \
   --query SecretString --output text)"
@@ -105,6 +130,16 @@ mksecret eventide-registration \
 mksecret eventide-payment \
   --from-literal=DATABASE_URL="postgres://payment_svc:$(rds PAYMENT_SVC_PASSWORD)@${HOST}:${PORT}/payment_db${SSL}" \
   --from-literal=INTERNAL_SERVICE_TOKEN="$INTERNAL_SERVICE_TOKEN"
+
+# Clean up any stuck deployments with ProgressDeadlineExceeded to prevent Helm upgrade blocking
+for svc in $SERVICES; do
+  if kubectl -n eventide get deployment "$svc" >/dev/null 2>&1; then
+    if kubectl -n eventide get deployment "$svc" -o jsonpath='{.status.conditions[?(@.reason=="ProgressDeadlineExceeded")].status}' 2>/dev/null | grep -q "False"; then
+      echo "== Deployment $svc was in failed progress state — resetting deployment =="
+      kubectl -n eventide delete deployment "$svc" --ignore-not-found
+    fi
+  fi
+done
 
 # --- deploy the chart -------------------------------------------------
 echo "== helm upgrade --install eventide =="

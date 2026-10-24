@@ -33,12 +33,27 @@ while IFS= read -r line; do KV+=("$line"); done < <(
 kubectl -n eventide create secret generic eventide-rds-master "${KV[@]}" \
   --dry-run=client -o yaml | kubectl apply -f -
 
-echo "== build + push db-bootstrap:$TAG =="
-aws ecr get-login-password --region "$REGION" \
-  | docker login --username AWS --password-stdin "$REG" >/dev/null
-docker build -f packages/db/Dockerfile --platform linux/amd64 \
-  -t "$REG/eventide/db-bootstrap:$TAG" .
-docker push "$REG/eventide/db-bootstrap:$TAG"
+if [ "${BUILD:-1}" != "0" ]; then
+  if docker info >/dev/null 2>&1; then
+    echo "== build + push db-bootstrap:$TAG =="
+    aws ecr get-login-password --region "$REGION" \
+      | docker login --username AWS --password-stdin "$REG" >/dev/null
+    docker build -f packages/db/Dockerfile --platform linux/amd64 \
+      -t "$REG/eventide/db-bootstrap:$TAG" .
+    docker push "$REG/eventide/db-bootstrap:$TAG"
+  else
+    echo "== Docker Desktop is not running; checking if db-bootstrap:$TAG is already in ECR =="
+    if aws ecr describe-images --region "$REGION" --repository-name eventide/db-bootstrap --image-ids imageTag="$TAG" >/dev/null 2>&1; then
+      echo "== found existing image $REG/eventide/db-bootstrap:$TAG in ECR =="
+    else
+      echo "ERROR: Docker Desktop is not running and db-bootstrap:$TAG does not exist in ECR." >&2
+      echo "Please start Docker Desktop and try again." >&2
+      exit 1
+    fi
+  fi
+else
+  echo "== skipping build + push (BUILD=0), using existing image $REG/eventide/db-bootstrap:$TAG =="
+fi
 
 echo "== run the Job (pod template is immutable — sed the image, recreate) =="
 kubectl -n eventide delete job db-bootstrap --ignore-not-found

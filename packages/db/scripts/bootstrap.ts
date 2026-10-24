@@ -41,6 +41,9 @@ async function createDatabases() {
       if (!roleExists) {
         await sql.unsafe(`CREATE ROLE ${role} WITH LOGIN PASSWORD '${pw}'`)
         console.log(`created role ${role}`)
+      } else {
+        await sql.unsafe(`ALTER ROLE ${role} WITH LOGIN PASSWORD '${pw}'`)
+        console.log(`updated password for role ${role}`)
       }
 
       const [{ exists: dbExists } = { exists: false }] = await sql`
