@@ -15,12 +15,14 @@ COPY packages/db/package.json packages/db/
 COPY apps/auth/package.json apps/auth/
 COPY apps/event/package.json apps/event/
 COPY apps/registration/package.json apps/registration/
+COPY apps/payment/package.json apps/payment/
 COPY apps/web/package.json apps/web/
 RUN bun install --frozen-lockfile
 COPY packages ./packages
 COPY apps/auth ./apps/auth
 COPY apps/event ./apps/event
 COPY apps/registration ./apps/registration
+COPY apps/payment ./apps/payment
 COPY apps/web ./apps/web
 # vite build only — `tsc --noEmit` is CI's job (turbo check-types), and it needs
 # the whole workspace's type graph which isn't worth reconstructing in the image.

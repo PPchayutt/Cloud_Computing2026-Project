@@ -1,7 +1,7 @@
 variable "account_id" {
   description = "AWS account ID. Guards against applying with stale credentials for another account."
   type        = string
-  default     = "735838417080"
+  default     = "163705675348"
 }
 
 variable "region" {

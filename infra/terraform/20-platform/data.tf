@@ -9,7 +9,7 @@ data "aws_caller_identity" "current" {}
 data "terraform_remote_state" "foundation" {
   backend = "s3"
   config = {
-    bucket = "eventide-tfstate-735838417080"
+    bucket = "eventide-tfstate-163705675348"
     key    = "10-foundation/terraform.tfstate"
     region = "us-east-1"
   }

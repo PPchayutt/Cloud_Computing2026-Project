@@ -14,6 +14,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 REGION=us-east-1
+export AWS_DEFAULT_REGION="$REGION"
+export AWS_REGION="$REGION"
 TAG="${1:-$(git rev-parse --short HEAD)}"
 REG="$(terraform -chdir=infra/terraform/10-foundation output -raw ecr_registry)"
 SECRET_ARN="$(terraform -chdir=infra/terraform/20-platform output -raw rds_master_secret_arn)"
@@ -24,7 +26,7 @@ kubectl create namespace eventide --dry-run=client -o yaml | kubectl apply -f -
 echo "== eventide-rds-master Secret from Secrets Manager =="
 KV=()   # bash 3.2 (macOS) has no mapfile
 while IFS= read -r line; do KV+=("$line"); done < <(
-  aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" \
+  aws secretsmanager get-secret-value --region "$REGION" --secret-id "$SECRET_ARN" \
     --query SecretString --output text \
   | jq -r 'to_entries[] | "--from-literal=\(.key)=\(.value)"'
 )

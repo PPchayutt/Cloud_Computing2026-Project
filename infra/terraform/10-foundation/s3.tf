@@ -21,10 +21,10 @@ resource "terraform_data" "uploads_bucket" {
   triggers_replace = [local.uploads_bucket, var.region]
 
   provisioner "local-exec" {
-    command = <<-EOT
-      aws s3api head-bucket --bucket ${local.uploads_bucket} 2>/dev/null \
-        || aws s3api create-bucket --bucket ${local.uploads_bucket} --region ${var.region}
-    EOT
+    command    = "aws s3api create-bucket --bucket ${local.uploads_bucket} --region ${var.region}"
+    on_failure = continue
+
+
   }
 }
 

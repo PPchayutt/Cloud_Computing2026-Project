@@ -15,13 +15,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 REGION=us-east-1
+export AWS_DEFAULT_REGION="$REGION"
+export AWS_REGION="$REGION"
 TAG="${1:-$(git rev-parse --short HEAD)}"
 REG="$(terraform -chdir=infra/terraform/10-foundation output -raw ecr_registry)"
 MASTER_SECRET_ARN="$(terraform -chdir=infra/terraform/20-platform output -raw rds_master_secret_arn)"
 
 aws eks update-kubeconfig --region "$REGION" --name eventide >/dev/null
 
-RDS_JSON="$(aws secretsmanager get-secret-value --secret-id "$MASTER_SECRET_ARN" \
+RDS_JSON="$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$MASTER_SECRET_ARN" \
   --query SecretString --output text)"
 rds() { echo "$RDS_JSON" | jq -r ".$1"; }
 HOST="$(rds host)"; PORT="$(rds port)"

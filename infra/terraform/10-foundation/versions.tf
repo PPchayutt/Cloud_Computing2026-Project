@@ -7,7 +7,7 @@ terraform {
   # The bucket name is account-scoped. If you switch Learner Lab accounts, change
   # it here and in ../20-platform/versions.tf, then re-run ../00-bootstrap.
   backend "s3" {
-    bucket       = "eventide-tfstate-735838417080"
+    bucket       = "eventide-tfstate-163705675348"
     key          = "10-foundation/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true

@@ -3,7 +3,7 @@ terraform {
 
   # Destroyed and recreated every session — see scripts/teardown.sh.
   backend "s3" {
-    bucket       = "eventide-tfstate-735838417080"
+    bucket       = "eventide-tfstate-163705675348"
     key          = "20-platform/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true

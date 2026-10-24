@@ -74,6 +74,7 @@ services:
     secretName: eventide-auth
     env:
       BETTER_AUTH_URL: "{{ .Values.publicUrl }}"
+      TRUSTED_ORIGINS: "*"
 
   event:
     port: 3000

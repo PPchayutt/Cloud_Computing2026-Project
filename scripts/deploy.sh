@@ -23,6 +23,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 REGION=us-east-1
+export AWS_DEFAULT_REGION="$REGION"
+export AWS_REGION="$REGION"
 SERVICES="${SERVICES:-auth event registration payment web}"
 TAG="${1:-$(git rev-parse --short HEAD)}"
 
@@ -49,7 +51,7 @@ done
 # --- namespace + app Secrets from eventide/rds-master ------------------
 kubectl create namespace eventide --dry-run=client -o yaml | kubectl apply -f -
 
-RDS_JSON="$(aws secretsmanager get-secret-value --secret-id "$MASTER_SECRET_ARN" \
+RDS_JSON="$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$MASTER_SECRET_ARN" \
   --query SecretString --output text)"
 rds() { echo "$RDS_JSON" | jq -r ".$1"; }
 HOST="$(rds host)"; PORT="$(rds port)"
