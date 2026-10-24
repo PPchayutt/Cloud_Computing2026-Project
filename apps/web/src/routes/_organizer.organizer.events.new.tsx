@@ -2,6 +2,7 @@ import { useForm } from '@tanstack/react-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { DateTimePicker } from '@/components/date-time-picker'
 import { Button } from '@/components/ui/button'
 import {
@@ -42,9 +43,9 @@ const localTime = (offsetHours: number) => {
 }
 
 const textFields = [
-  { name: 'title', label: 'Event title', type: 'text' },
-  { name: 'ticketName', label: 'Ticket name', type: 'text' },
-  { name: 'price', label: 'Price (THB)', type: 'text' },
+  { name: "title", label: "Event title", type: "text", placeholder: "e.g. Bangkok Tech Conference" },
+  { name: "ticketName", label: "Ticket name", type: "text", placeholder: "e.g. Early Bird" },
+  { name: "price", label: "Price (THB)", type: "text", placeholder: "500.00" },
 ] as const
 
 const dateFields = [
@@ -65,6 +66,7 @@ function CreateEventPage() {
   const [createdEventId, setCreatedEventId] = useState<string | null>(null)
   const [ticketReady, setTicketReady] = useState(false)
   const [thumbnailFailed, setThumbnailFailed] = useState(false)
+  const [shouldPublish, setShouldPublish] = useState(true)
 
   const finish = async (eventId: string) => {
     await queryClient.invalidateQueries({ queryKey: ['events'] })
@@ -162,7 +164,7 @@ function CreateEventPage() {
           }}
         >
           <FieldGroup>
-            {textFields.map(({ name, label, type }) => (
+            {textFields.map(({ name, label, type, placeholder }) => (
               <form.Field
                 key={name}
                 name={name}

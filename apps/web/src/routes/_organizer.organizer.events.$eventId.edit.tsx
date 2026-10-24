@@ -65,6 +65,7 @@ function EditEventPage() {
   const queryClient = useQueryClient()
   const { data: event } = useSuspenseQuery(eventQuery(eventId))
   const [error, setError] = useState('')
+  const totalTicketQuota = event.ticketTypes?.reduce((sum, t) => sum + t.quota, 0) ?? 0
 
   const updateEvent = useMutation({
     mutationFn: async (value: EventFormValues) => {

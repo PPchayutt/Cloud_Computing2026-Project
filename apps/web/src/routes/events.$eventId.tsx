@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form'
-import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Calendar, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import { EventThumbnail } from '@/components/event-thumbnail'
@@ -25,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { edenPayment, edenReg } from '@/lib/eden'
+import { authClient } from '@/lib/auth'
+import { edenEvent, edenPayment, edenReg } from '@/lib/eden'
 import { eventQuery } from '@/lib/queries'
 
 export const Route = createFileRoute('/events/$eventId')({
@@ -36,7 +37,22 @@ export const Route = createFileRoute('/events/$eventId')({
 function EventPage() {
   const { eventId } = Route.useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { data: session } = authClient.useSession()
   const { data: event } = useSuspenseQuery(eventQuery(eventId))
+  const isOwner = session?.user?.id === event.ownerId || (session?.user as any)?.role === 'admin'
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      const result = await edenEvent.api.events({ id: eventId }).publish.post()
+      if (result.error) throw new Error('Unable to publish event. Ensure total ticket quota is within capacity.')
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'] })
+      toast.success('Event published successfully!')
+    },
+    onError: (err) => toast.error(err.message),
+  })
   const mutation = useMutation({
     mutationFn: async (value: { ticketTypeId: string; quantity: number }) => {
       const orderResult = await edenReg.api.orders.post(
@@ -66,7 +82,36 @@ function EventPage() {
   })
   return (
     <div className="flex flex-1 flex-col">
-      <main className="container mx-auto grid flex-1 gap-8 px-4 py-10 lg:grid-cols-[1.6fr_1fr]">
+      <main className="container mx-auto flex flex-1 flex-col gap-6 px-4 py-10">
+        {isOwner && event.status === 'DRAFT' ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-amber-950 dark:text-amber-200">
+                This event is currently in Draft
+              </p>
+              <p className="text-sm text-amber-800/80 dark:text-amber-300/80">
+                Attendees cannot see or register for this event until you publish it.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => publishMutation.mutate()}
+                disabled={publishMutation.isPending}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-medium"
+              >
+                {publishMutation.isPending ? 'Publishing…' : 'Publish event now'}
+              </Button>
+              <Button
+                variant="outline"
+                render={<Link to="/organizer/events/$eventId/edit" params={{ eventId: event.id }} />}
+              >
+                Edit event
+              </Button>
+            </div>
+          </div>
+        ) : null}
+        <div className="grid flex-1 gap-8 lg:grid-cols-[1.6fr_1fr]">
+
         <section className="flex flex-col gap-5">
           <EventThumbnail src={event.coverUrl} title={event.title} eager className="rounded-xl" />
           <div className="flex flex-wrap gap-2">
@@ -168,6 +213,7 @@ function EventPage() {
             </Button>
           </CardFooter>
         </Card>
+        </div>
       </main>
       <SiteFooter />
     </div>

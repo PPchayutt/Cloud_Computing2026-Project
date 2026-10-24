@@ -5,7 +5,7 @@ Computing 2026. Graded on **both** the application and the cloud infrastructure,
 written report and a live demo — so the app is deliberately small and the infrastructure
 does the talking.
 
-Three independently deployed Elysia/Bun microservices on EKS, one static React SPA served
+Four independently deployed Elysia/Bun microservices on EKS, one static React SPA served
 from the cluster, one RDS Postgres with a database per service, TLS via Route 53 + ACM on
 a Terraform-managed NLB.
 
@@ -22,7 +22,7 @@ a Terraform-managed NLB.
 
 ## Status
 
-All three services + the SPA are built, containerised, and deployed to real EKS via one
+All four services + the SPA are built, containerised, and deployed to real EKS via one
 Helm chart; every week-1–4 GATE has passed on the deployed system (rebuild-from-zero,
 DB-per-service boundary, S3 presigned upload, HPA 2→8→2). **Left:** apply the Route 53 /
 ACM custom domain and wire the Google OAuth client (both plumbed, need a lab session +
@@ -35,6 +35,7 @@ apps/
   auth/           Elysia · better-auth (Drizzle + jwt + bearer), Google + email/password
   event/          Elysia · event metadata, S3 presigned cover uploads
   registration/   Elysia · tickets, capacity enforced in one local transaction
+  payment/        Elysia · checkout, simulated payment processing & order reconciliation
   web/            Vite + React 19 + Tailwind v4 SPA, served from nginx in-cluster
 packages/
   shared/         @eventide/shared — defineEnv (Zod), shared TypeBox models, bearer-JWT macro
@@ -72,22 +73,23 @@ For the AWS/infra work you also need `awscli`, `terraform` (via `brew tap hashic
 
 ```bash
 bun install          # installs all workspaces
-make dev             # postgres + bootstrap + the 3 services + the SPA, all in watch mode
+make dev             # postgres + bootstrap + the 4 services + the SPA, all in watch mode
 ```
 
 `make dev` will:
 
 1. start a local Postgres container (`docker compose up -d db`),
 2. run `packages/db/scripts/bootstrap.ts` — creates the `auth_svc` / `event_svc` /
-   `registration_svc` roles and their databases, then applies the Drizzle migrations,
-3. `turbo run dev` — the three services (`bun --watch`) and the Vite dev server for `apps/web`.
+   `registration_svc` / `payment_svc` roles and their databases, then applies the Drizzle migrations,
+3. `turbo run dev` — the four services (`bun --watch`) and the Vite dev server for `apps/web`.
 
 | Service | URL | Notes |
 |---|---|---|
 | auth | http://localhost:3000 | port 3000 is fixed — it's the Google OAuth redirect host |
 | event | http://localhost:3001 | |
 | registration | http://localhost:3002 | |
-| web (SPA) | http://localhost:5173 | started by `make dev` too; Vite proxies `/api/*` to the three services |
+| payment | http://localhost:3003 | |
+| web (SPA) | http://localhost:5173 | started by `make dev` too; Vite proxies `/api/*` to the services |
 
 Check one is up: `curl localhost:3001/health/live` → `{"status":"ok","service":"event"}`.
 Interactive API docs: `http://localhost:3001/swagger`.
@@ -110,7 +112,7 @@ SEED_FORCE=1 make seed   # wipe and re-seed
 ```bash
 docker compose up -d db
 bun run --filter @eventide/db db:bootstrap
-bun run dev                     # turbo run dev — the 3 services + the SPA
+bun run dev                     # turbo run dev — the 4 services + the SPA
 ```
 
 Run one workspace only: `bun run --filter @eventide/event dev`
@@ -221,7 +223,7 @@ make up                            # terraform apply 20-platform, then kubectl g
 # 3. Create the databases + roles + run migrations (one-shot Job, idempotent)
 make db-bootstrap
 
-# 4. Build + push all 4 images, helm upgrade, roll out
+# 4. Build + push all images, helm upgrade, roll out
 make deploy                        # PUBLIC_URL defaults to the custom domain if DNS is set,
                                    #   else http://<nlb>. Override: PUBLIC_URL=https://... make deploy
 
