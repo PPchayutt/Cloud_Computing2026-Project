@@ -59,12 +59,26 @@ function EventPage() {
         { eventId, items: [value] },
         { headers: { 'idempotency-key': crypto.randomUUID() } },
       )
-      if (orderResult.error || !orderResult.data) throw new Error('Reservation failed')
+      if (orderResult.error || !orderResult.data) {
+        const errVal = (orderResult.error as any)?.value
+        const msg =
+          (typeof errVal === 'object' && errVal?.message) ||
+          (typeof errVal === 'string' && errVal) ||
+          'Reservation failed. The tickets may be unavailable or sold out.'
+        throw new Error(msg)
+      }
       const paymentResult = await edenPayment.api.payments.checkout.post(
         { orderId: orderResult.data.id },
         { headers: { 'idempotency-key': crypto.randomUUID() } },
       )
-      if (paymentResult.error || !paymentResult.data) throw new Error('Payment failed')
+      if (paymentResult.error || !paymentResult.data) {
+        const errVal = (paymentResult.error as any)?.value
+        const msg =
+          (typeof errVal === 'object' && errVal?.message) ||
+          (typeof errVal === 'string' && errVal) ||
+          'Payment failed. Please try again.'
+        throw new Error(msg)
+      }
       return paymentResult.data
     },
     onSuccess: async (payment) => {
@@ -208,9 +222,24 @@ function EventPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button form="checkout-form" type="submit" disabled={!first || mutation.isPending}>
-              {mutation.isPending ? 'Processing…' : 'Reserve and pay now'}
-            </Button>
+            {session ? (
+              <Button
+                form="checkout-form"
+                type="submit"
+                className="w-full"
+                disabled={!first || mutation.isPending}
+              >
+                {mutation.isPending ? "Processing…" : "Reserve and pay now"}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                className="w-full"
+                onClick={() => navigate({ to: "/login" })}
+              >
+                Log in to reserve tickets
+              </Button>
+            )}
           </CardFooter>
         </Card>
         </div>

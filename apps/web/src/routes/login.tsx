@@ -142,7 +142,15 @@ function LoginPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: '/' })}
+            onClick={async () => {
+              setError('')
+              try {
+                const res = await authClient.signIn.social({ provider: 'google', callbackURL: '/' })
+                if (res?.error) setError('Google sign-in is not configured on this environment.')
+              } catch {
+                setError('Google sign-in is not configured on this environment.')
+              }
+            }}
           >
             Continue with Google
           </Button>

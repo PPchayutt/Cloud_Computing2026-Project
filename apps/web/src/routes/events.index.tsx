@@ -22,7 +22,7 @@ function EventsListPage() {
   const navigate = Route.useNavigate()
   const { data } = useSuspenseQuery(eventsQuery(search))
   const hasPrev = search.page > 1
-  const hasNext = data.items.length === search.pageSize
+  const hasNext = search.page * search.pageSize < data.total
 
   return (
     <div className="flex flex-1 flex-col">
