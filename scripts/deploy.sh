@@ -77,7 +77,7 @@ if [ "$BOOTSTRAPPED" != "1" ]; then
 fi
 
 RDS_JSON="$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$MASTER_SECRET_ARN" \
-  --query SecretString --output text)"
+  --query SecretString --output text | tr -d '\r')"
 rds() { echo "$RDS_JSON" | jq -r ".$1"; }
 HOST="$(rds host)"; PORT="$(rds port)"
 # 48-char key-encryption key for better-auth's JWKS — from the rds-master secret
@@ -100,7 +100,7 @@ AUTH_ARGS=(
   --from-literal=BETTER_AUTH_SECRET="${BETTER_AUTH_SECRET}"
 )
 GOOGLE_JSON="$(aws secretsmanager get-secret-value --region "$REGION" \
-  --secret-id eventide/google-oauth --query SecretString --output text 2>/dev/null || true)"
+  --secret-id eventide/google-oauth --query SecretString --output text 2>/dev/null | tr -d '\r' || true)"
 if [ -n "$GOOGLE_JSON" ]; then
   AUTH_ARGS+=(--from-literal=GOOGLE_CLIENT_ID="$(echo "$GOOGLE_JSON" | jq -r .GOOGLE_CLIENT_ID)")
   AUTH_ARGS+=(--from-literal=GOOGLE_CLIENT_SECRET="$(echo "$GOOGLE_JSON" | jq -r .GOOGLE_CLIENT_SECRET)")
@@ -112,7 +112,7 @@ mksecret eventide-auth "${AUTH_ARGS[@]}"
 # IRSA and node-role access are both denied, §5.3). These expire with the
 # session — re-run `make deploy` (or just this block) each session.
 UPLOADS_BUCKET="$(terraform -chdir=infra/terraform/10-foundation output -raw uploads_bucket)"
-CREDS="$(aws configure export-credentials --format process 2>/dev/null || true)"
+CREDS="$(aws configure export-credentials --format process 2>/dev/null | tr -d '\r' || true)"
 cred() { echo "$CREDS" | jq -r ".$1 // empty"; }
 mksecret eventide-event \
   --from-literal=DATABASE_URL="postgres://event_svc:$(rds EVENT_SVC_PASSWORD)@${HOST}:${PORT}/event_db${SSL}" \

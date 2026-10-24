@@ -25,9 +25,14 @@ kubectl create namespace eventide --dry-run=client -o yaml | kubectl apply -f -
 
 echo "== eventide-rds-master Secret from Secrets Manager =="
 KV=()   # bash 3.2 (macOS) has no mapfile
-while IFS= read -r line; do KV+=("$line"); done < <(
+while IFS= read -r line; do
+  line="${line%$'\r'}"
+  [ -z "$line" ] && continue
+  KV+=("$line")
+done < <(
   aws secretsmanager get-secret-value --region "$REGION" --secret-id "$SECRET_ARN" \
     --query SecretString --output text \
+  | tr -d '\r' \
   | jq -r 'to_entries[] | "--from-literal=\(.key)=\(.value)"'
 )
 kubectl -n eventide create secret generic eventide-rds-master "${KV[@]}" \

@@ -13,8 +13,9 @@ import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
 
-const MASTER_URL =
+const MASTER_URL = (
   process.env.MASTER_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/postgres'
+).trim().replace(/\r/g, '')
 
 // SYSTEM-DESIGN §4.1 — one database per service, each owned by its own role,
 // with no grants on the others. Passwords here are local-only; on RDS they come
@@ -35,7 +36,8 @@ async function createDatabases() {
   const sql = postgres(MASTER_URL, { max: 1 })
   try {
     for (const { role, db } of SERVICES) {
-      const pw = process.env[`${role.toUpperCase()}_PASSWORD`] ?? role
+      const rawPw = process.env[`${role.toUpperCase()}_PASSWORD`] ?? role
+      const pw = rawPw.trim().replace(/\r/g, '')
       const [{ exists: roleExists } = { exists: false }] = await sql`
         SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = ${role}) AS exists`
       if (!roleExists) {
@@ -65,7 +67,8 @@ function runMigrations() {
     const url = new URL(base)
     url.pathname = `/${db}`
     url.username = role
-    url.password = process.env[`${role.toUpperCase()}_PASSWORD`] ?? role
+    const rawPw = process.env[`${role.toUpperCase()}_PASSWORD`] ?? role
+    url.password = rawPw.trim().replace(/\r/g, '')
     console.log(`migrating ${db}`)
     execFileSync('bunx', ['drizzle-kit', 'migrate', '--config', config], {
       cwd: pkgRoot,

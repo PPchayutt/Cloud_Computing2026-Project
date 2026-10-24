@@ -24,7 +24,7 @@ MASTER_SECRET_ARN="$(terraform -chdir=infra/terraform/20-platform output -raw rd
 aws eks update-kubeconfig --region "$REGION" --name eventide >/dev/null
 
 RDS_JSON="$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$MASTER_SECRET_ARN" \
-  --query SecretString --output text)"
+  --query SecretString --output text | tr -d '\r')"
 rds() { echo "$RDS_JSON" | jq -r ".$1"; }
 HOST="$(rds host)"; PORT="$(rds port)"
 AUTH_DB_URL="postgres://auth_svc:$(rds AUTH_SVC_PASSWORD)@${HOST}:${PORT}/auth_db?sslmode=require"

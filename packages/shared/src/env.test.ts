@@ -14,4 +14,10 @@ describe('defineEnv', () => {
       /SHARED_TEST_MISSING/,
     )
   })
+
+  it('strips carriage returns and whitespace from string env vars', () => {
+    process.env.SHARED_TEST_CR = 'secret-value\r'
+    const env = defineEnv(z.object({ SHARED_TEST_CR: z.string() }))
+    expect(env.SHARED_TEST_CR).toBe('secret-value')
+  })
 })

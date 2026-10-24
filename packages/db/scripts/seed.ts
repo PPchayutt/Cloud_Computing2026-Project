@@ -4,14 +4,16 @@ import postgres from 'postgres'
 import { user as authUsers } from '../src/auth/schema.ts'
 import { categories, eventImages, events, ticketTypes, venues } from '../src/event/schema.ts'
 
-const AUTH_URL = process.env.AUTH_URL ?? 'http://localhost:3000'
-const EVENT_URL = process.env.EVENT_URL ?? 'http://localhost:3001'
-const REGISTRATION_URL = process.env.REGISTRATION_URL ?? 'http://localhost:3002'
-const PAYMENT_URL = process.env.PAYMENT_URL ?? 'http://localhost:3003'
-const AUTH_DATABASE_URL =
+const AUTH_URL = (process.env.AUTH_URL ?? 'http://localhost:3000').trim().replace(/\r/g, '')
+const EVENT_URL = (process.env.EVENT_URL ?? 'http://localhost:3001').trim().replace(/\r/g, '')
+const REGISTRATION_URL = (process.env.REGISTRATION_URL ?? 'http://localhost:3002').trim().replace(/\r/g, '')
+const PAYMENT_URL = (process.env.PAYMENT_URL ?? 'http://localhost:3003').trim().replace(/\r/g, '')
+const AUTH_DATABASE_URL = (
   process.env.AUTH_DATABASE_URL ?? 'postgres://auth_svc:auth_svc@localhost:5432/auth_db'
-const EVENT_DATABASE_URL =
+).trim().replace(/\r/g, '')
+const EVENT_DATABASE_URL = (
   process.env.EVENT_DATABASE_URL ?? 'postgres://event_svc:event_svc@localhost:5432/event_db'
+).trim().replace(/\r/g, '')
 const PASSWORD = 'seed-password-123'
 const THUMBNAIL = Bun.file(new URL('../assets/eventide-seed-thumbnail.webp', import.meta.url))
 const EVENT_TITLES = [
@@ -269,7 +271,7 @@ async function main() {
               set: { maxPerUser: 20 },
             })
             .returning()
-        )[0],
+          )[0],
         'ticket type insert returned no row',
       )
       await eventDb
